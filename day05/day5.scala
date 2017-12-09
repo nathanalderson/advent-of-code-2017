@@ -23,10 +23,9 @@ def play(board: Board): Int = {
   lastTurn.turnNum
 }
 
-@tailrec
-def play(turn: Turn): Turn = turn match {
-  case t @ Turn(_,_,_,true) => t
-  case t => play(nextTurn(t))
+def play(turn: Turn): Turn = {
+  val turns = Iterator.iterate(turn)(nextTurn)
+  turns.find(_.done).get
 }
 
 val part = 2
