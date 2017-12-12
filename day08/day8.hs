@@ -4,7 +4,8 @@ import Control.Exception
 import Debug.Trace
 
 type Register = String
-type Registers = Map.Map Register Int
+type Data = Int
+type Registers = Map.Map Register Data
 
 data Op = Inc | Dec
     deriving (Enum, Eq, Ord, Bounded)
@@ -16,7 +17,8 @@ instance Read Op where
     readsPrec _ "dec" = [(Dec,"")]
     readsPrec _ _ = []
 
-type Arg = Int
+type Arg = Data
+
 data Condition = Gt | Lt | Gte | Lte | Eq | Neq
     deriving (Enum, Eq, Ord, Bounded)
 instance Show Condition where
@@ -65,15 +67,23 @@ main = do
                        \c dec -10 if a >= 1 \n\
                        \c inc -20 if c == 10"
         testRegs = process testContent
-        testLargest = maximum (Map.elems testRegs)
+        testLargest = maximum (Map.elems $ last testRegs)
         regs = process content
-        largest = maximum (Map.elems regs)
+        largest = maximum (Map.elems $ last regs)
     -- return $ assert (testLargest == 1) ()
-    print $ Map.assocs testRegs
-    putStrLn $ "testLargest = " ++ show testLargest
-    print $ Map.assocs regs
+    -- print $ Map.assocs $ last testRegs
+    putStrLn $ "test largest = " ++ show testLargest
+    putStrLn $ "test largest ever = " ++ show (largestEver testRegs)
+    -- print $ Map.assocs $ last regs
     putStrLn $ "largest = " ++ show largest
+    putStrLn $ "largest ever = " ++ show (largestEver regs)
     hClose handle
+
+largestEver :: [Registers] -> Data
+largestEver regsList =
+    let maxReg m | Map.null m = 0
+        maxReg regs = maximum (Map.elems regs)
+     in foldl (\acc regs -> max acc (maxReg regs)) 0 regsList
 
 parseLine :: String -> Instruction
 -- parseLine s | trace ("parseLine " ++ s) False = undefined
@@ -88,7 +98,7 @@ getComparator (Instruction _ _ _ _ cond condArg) =
                  Eq -> (==condArg)
                  Neq -> (/=condArg)
 
-getModifier :: Instruction -> (Int -> Int)
+getModifier :: Instruction -> (Data -> Data)
 getModifier (Instruction _ op arg _ _ _) =
     case op of Inc -> (+arg)
                Dec -> (subtract arg)
@@ -100,16 +110,16 @@ doInstruction registers instruction =
         modifier = getModifier instruction
         alterFunc Nothing = Just $ modifier 0
         alterFunc (Just x) = Just $ modifier x
-     in if comparator (getReg registers (condReg instruction))
+     in if comparator . getReg registers $ condReg instruction
            then Map.alter alterFunc (reg instruction) registers
            else registers
 
-getReg :: Registers -> Register -> Int
+getReg :: Registers -> Register -> Data
 getReg regs reg = Map.findWithDefault 0 reg regs
 
-process :: String -> Registers
+process :: String -> [Registers]
 process content =
     let allLines = lines content
         parsedLines = map parseLine allLines
-     in foldl doInstruction Map.empty parsedLines
+     in scanl doInstruction Map.empty parsedLines
 
