@@ -23,49 +23,41 @@ main = do
                  (9, "{{<!!>},{<!!>},{<!!>},{<!!>}}"),
                  (3, "{{<a!>},{<a!>},{<a!>},{<ab>}}")
                 ]
-    -- mapM (uncurry runTest) tests
+    mapM (uncurry runTest) tests
     putStrLn $ "score = " ++ show (getScore (State content 0 1 False False 0))
-    let countTests = [(0, "<>"),
-                      (17, "<random characters>"),
-                      (3, "<<<<>"),
-                      (2, "<{!>}>"),
-                      (0, "<!!>"),
-                      (0, "<!!!>>"),
-                      (10, "<{o\"i!a,<{i<a>")
-                     ]
     hClose handle
 
--- runTest :: Int -> String -> IO String
--- runTest expectedScore input = do
---     let score = getScore $ State input 0 1 False False 0
---         output = input ++ " = " ++ show score ++
---                  " (" ++ show expectedScore ++ ")"
---     putStrLn output
---     assert (score == expectedScore) $ return output
+runTest :: Int -> String -> IO String
+runTest expectedScore input = do
+    let score = fst . getScore $ State input 0 1 False False 0
+        output = input ++ " = " ++ show score ++
+                 " (" ++ show expectedScore ++ ")"
+    putStrLn output
+    assert (score == expectedScore) $ return output
 
 getScore :: State -> (Int, Int)
--- getScore s | trace ("getScore " ++ show s) False = undefined
 getScore (State [] score _ _ _ garbageCount) = (score, garbageCount)
-getScore (State (x:rest) score level garbage True garbageCount) =
-    getScore (State rest score level garbage False garbageCount)
+getScore (State (x:xs) s l g True gc) =
+    getScore (State xs s l g False gc)
 
-getScore (State ('!':rest) score level True cancelled garbageCount) =
-    getScore (State rest score level True True garbageCount)
+getScore (State ('!':xs) s l True c gc) =
+    getScore (State xs s l True True gc)
 
-getScore (State ('>':rest) score level True cancelled garbageCount) =
-    getScore (State rest score level False cancelled garbageCount)
+getScore (State ('>':xs) s l True c gc) =
+    getScore (State xs s l False c gc)
 
-getScore (State ('<':rest) score level False cancelled garbageCount) =
-    getScore (State rest score level True cancelled garbageCount)
+getScore (State ('<':xs) s l False c gc) =
+    getScore (State xs s l True c gc)
 
-getScore (State ('{':rest) score level False cancelled garbageCount) =
-    getScore (State rest (score+level) (level+1) False cancelled garbageCount)
+getScore (State ('{':xs) s l False c gc) =
+    getScore (State xs (s+l) (l+1) False c gc)
 
-getScore (State ('}':rest) score level False cancelled garbageCount) =
-    getScore (State rest score (level-1) False cancelled garbageCount)
+getScore (State ('}':xs) s l False c gc) =
+    getScore (State xs s (l-1) False c gc)
 
-getScore (State (x:rest) score level False cancelled garbageCount) =
-    getScore (State rest score level False cancelled garbageCount)
+getScore (State (x:xs) s l False c gc) =
+    getScore (State xs s l False c gc)
 
-getScore (State (x:rest) score level True cancelled garbageCount) =
-    getScore (State rest score level True cancelled (garbageCount+1))
+getScore (State (x:xs) s l True c gc) =
+    getScore (State xs s l True c (gc+1))
+
