@@ -6,17 +6,28 @@ def main():
         int(k) : [int(p) for p in ps.strip().split(", ")]
         for (k,ps) in (line.split(" <-> ") for line in lines)
     }
-    group0 = set([0])
-    explore = [0]
+    group0 = getGroup(0, pipes)
+    print("part1 =", len(group0))
+    numGroups = 0
+    while pipes:
+        numGroups += 1
+        nextNode = list(pipes.keys())[0]
+        group = getGroup(nextNode, pipes)
+        for g in group:
+            pipes.pop(g)
+    print("part2 =", numGroups)
+
+def getGroup(rootNode, pipes):
+    group = set([rootNode])
+    explore = [rootNode]
     while explore:
         p = explore.pop()
         more = pipes[p]
         for m in more:
-            if m not in group0:
-                group0.add(m)
+            if m not in group:
+                group.add(m)
                 explore.append(m)
-    print(group0)
-    print(len(group0))
+    return group
 
 
 if __name__ == "__main__":
