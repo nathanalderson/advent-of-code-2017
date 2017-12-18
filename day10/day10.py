@@ -33,11 +33,11 @@ def main():
 
     # part2
     raw = "147,37,249,1,31,2,226,0,161,71,254,243,183,255,30,70"
-    p2lengths = [ord(c) for c in raw] + [17, 31, 73, 47, 23]
-    h = knot_hash(p2lengths)
+    h = knot_hash(raw)
     print("hash =", show_hash(h))
 
-def knot_hash(lengths):
+def knot_hash(raw):
+    lengths = [ord(c) for c in raw] + [17, 31, 73, 47, 23]
     board = Circular(range(256))
     pos = 0
     skip = 0
@@ -47,7 +47,7 @@ def knot_hash(lengths):
 
 def densify(sparse_hash):
     chunks = (sparse_hash[i:i+16] for i in range(0, len(sparse_hash), 16))
-    rval = (xor(l) for l in chunks)
+    rval = [xor(l) for l in chunks]
     return rval
 
 def xor(l):
