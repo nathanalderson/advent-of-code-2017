@@ -1,34 +1,37 @@
 #! /usr/bin/env python3
+import functools
 
 def main():
-    testmoves = "s1,x3/4,pe/b".strip().split(",")
+    test_raw_moves = "s1,x3/4,pe/b".strip().split(",")
+    testmoves = [toMove(m) for m in test_raw_moves]
     testprogs = list("abcde")
     dance(testprogs, testmoves)
     print("test:", "".join(testprogs))
-    moves = open("input", "r").read().strip().split(",")
+    raw_moves = open("input", "r").read().strip().split(",")
+    moves = [toMove(m) for m in raw_moves]
     progs = list("abcdefghijklmnop")
     dance(progs, moves)
     print("part1:", "".join(progs))
-    # for i in range(1000000000 - 1):
-    #     if i % 100 == 0:
-    #         print(i)
-    #     dance(progs, moves)
-    # print("part2:", "".join(progs))
+    for i in range(1000000000 - 1):
+        if i % 100 == 0:
+            print(i)
+        dance(progs, moves)
+    print("part2:", "".join(progs))
+
+def toMove(s):
+    if s.startswith("s"):
+        return functools.partial(spin, int(s[1:]))
+    elif s.startswith("x"):
+        slash = s.index("/")
+        a = int(s[1:slash])
+        b = int(s[slash+1:])
+        return functools.partial(exchange, a, b)
+    elif s.startswith("p"):
+        return functools.partial(partner, s[1], s[3])
 
 def dance(progs, moves):
     for move in moves:
-        if move.startswith("s"):
-            a = int(move[1:])
-            spin(a, progs)
-        elif move.startswith("x"):
-            slash = move.index("/")
-            a = int(move[1:slash])
-            b = int(move[slash+1:])
-            exchange(a, b, progs)
-        elif move.startswith("p"):
-            a = move[1]
-            b = move[3]
-            partner(a, b, progs)
+        move(progs)
 
 def spin(x, progs):
     progs[:] = progs[-x:] + progs[:-x]
