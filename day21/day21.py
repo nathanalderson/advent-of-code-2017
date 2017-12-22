@@ -8,21 +8,30 @@ def main():
     patterns = [line.strip().split(" => ") for line in open("input", "r").readlines()]
     test_patterns = [ ["../.#", "##./#../..."]
                     , [".#./..#/###", "#..#/..../..../#..#"] ]
-    image = enhance(image, patterns)
-    print(image)
-    image = enhance(image, patterns)
-    print(image)
-    image = enhance(image, patterns)
-    print(image)
+    for _ in range(5):
+        image = enhance(image, patterns)
+    print("part 1:", len(list(i for i in image_array_to_string(image) if i == '#')))
+
+    image = numpy.array([list(".#."), list("..#"), list("###")])
+    for i in range(18):
+        print("round", i)
+        image = enhance(image, patterns)
+    print("part 2:", len(list(i for i in image_array_to_string(image) if i == '#')))
+
+cache = {}
 
 def enhance(image, patterns):
     # print("enhance", image)
     size = len(image)
     if size == 2 or size == 3:
         for pattern in patterns:
-            new_image = try_pattern(image, *pattern)
-            if new_image is not None:
-                return new_image
+            try:
+                return cache[image_array_to_string(image)]
+            except KeyError:
+                new_image = try_pattern(image, *pattern)
+                if new_image is not None:
+                    cache[image_array_to_string(image)] = new_image
+                    return new_image
         else:
             raise Exception("No patterns matched")
     else:
@@ -48,14 +57,18 @@ def image_array_to_string(a):
     return "/".join("".join(r.tolist()) for r in a)
 
 def pattern_matches(image, pattern):
-    images = [ image, flip_horizontal(image), flip_vertical(image), rotate(image),
-               rotate(rotate(image)), rotate(rotate(rotate(image))) ]
-    for i in images:
+    for i in versions(image):
         s = image_array_to_string(i)
-        print(s, pattern)
+        # print("pattern matches", i, s, pattern)
         if s == pattern:
             return True
     return False
+
+def versions(image):
+    rotations = [image, rotate(image), rotate(rotate(image)), rotate(rotate(rotate(image)))]
+    flip_hs = [flip_horizontal(i) for i in rotations]
+    flip_vs = [flip_vertical(i) for i in rotations]
+    yield from rotations + flip_hs + flip_vs
 
 def combine(chunks):
     # print("combine", chunks)
