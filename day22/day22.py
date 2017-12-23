@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 import collections
+import math
 
 UP = (0, 1)
 DOWN = (0, -1)
@@ -10,22 +11,35 @@ CLOCKWISE = [UP, RIGHT, DOWN, LEFT]
 CCLOCKWISE = list(reversed(CLOCKWISE))
 
 def main():
-    test_board = set([(1,1), (-1,1)])
-    print("part 1", play(test_board, 1))
+    test_board = set([(1,1), (-1,0)])
+    assert play(test_board, 10000, burst1) == 5587
+    board = get_board(open('input', 'r'))
+    print("part 1:", play(board, 10000, burst1))
 
-def play(board, rounds):
+def get_board(f):
+    lines = [l.strip() for l in f.readlines()]
+    height = len(lines)
+    width = len(lines[0])
+    board = set()
+    for row, line in enumerate(lines):
+        for col, char in enumerate(line):
+            if char == '#':
+                x, y = col-(width//2), -(row-(height//2))
+                board.add((x,y))
+    return board
+
+def play(board, rounds, burst_function):
     pos = (0,0)
     direction = UP
     infections = 0
     for r in range(rounds):
         if r % 1000 == 0:
             print("round", r)
-        pos, direction, infected = burst(board, pos, direction)
+        pos, direction, infected = burst_function(board, pos, direction)
         infections += infected
-    print(board)
     return infections
 
-def burst(board, pos, direction):
+def burst1(board, pos, direction):
     if pos in board:
         turn = turn_right
         board.remove(pos)
@@ -35,7 +49,8 @@ def burst(board, pos, direction):
         board.add(pos)
         infect = True
     new_dir = turn(direction)
-    return vadd(pos, new_dir), turn(new_dir), int(infect)
+    new_pos = vadd(pos, new_dir)
+    return new_pos, new_dir, int(infect)
 
 def turn_right(direction):
     return CLOCKWISE[(CLOCKWISE.index(direction)+1) % len(CLOCKWISE)]
