@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 import functools
+import itertools
 
 def main():
     test_raw_moves = "s1,x3/4,pe/b".strip().split(",")
@@ -11,12 +12,11 @@ def main():
     moves = [toMove(m) for m in raw_moves]
     progs = list("abcdefghijklmnop")
     dance(progs, moves)
-    print("part1:", "".join(progs))
-    for i in range(1000000000 - 1):
-        if i % 100 == 0:
-            print(i)
+    print("part 1:", "".join(progs))
+    progs = list("abcdefghijklmnop")
+    for i in range(999999960, 1000000000):
         dance(progs, moves)
-    print("part2:", "".join(progs))
+    print("part 2:", "".join(progs))
 
 def toMove(s):
     if s.startswith("s"):
