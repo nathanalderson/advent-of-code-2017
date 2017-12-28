@@ -3,27 +3,28 @@ import collections
 import time
 
 def main():
-    # instructions = read_instructions("input")
-    # prog = Program(instructions)
-    # prog.run()
-    # print("part 1 =", prog.muls)
-    instructions2 = read_instructions("optimized")
-    prog2 = Program(instructions2, regs = {"a":1})
-    prog2.run()
-    print("part 2 =", prog2.registers['h'])
+    instructions = read_instructions("input")
+    prog = Program(instructions)
+    prog.run()
+    print("part 1 =", prog.muls)
+    h = sum(1 for x in range(109300, 126300+1, 17) if not isprime(x))
+    print("part 2 =", h)
+
+def isprime(x):
+    for i in range(2,x):
+        if x % i == 0:
+            return False
+    return True
 
 def read_instructions(filename):
     return [line.strip() for line in open(filename, "r").readlines() if line.strip() != ""]
 
 class Program():
-    def __init__(self, instructions, regs = None):
+    def __init__(self, instructions):
         self.instructions = instructions
         self.pc = 0
         self.muls = 0
         self.registers = collections.defaultdict(int)
-        regs = regs or {}
-        for k,v in regs.items():
-            self.registers[k] = v
 
     def val_or_reg(self, reg):
         try:
@@ -34,10 +35,10 @@ class Program():
 
     def run(self):
         while True:
-            time.sleep(0.1)
+            # time.sleep(0.1)
             try:
                 op, regs = self.instructions[self.pc].split(" ", maxsplit=1)
-                print(self.pc, op, regs, end="")
+                # print(self.pc, op, regs, end="")
             except IndexError:
                 break
             if op == "set":
@@ -59,7 +60,7 @@ class Program():
                     self.pc += self.val_or_reg(reg2)
                 else:
                     self.pc += 1
-            print("->", self.registers)
+            # print("->", self.registers)
 
 if __name__ == "__main__":
     main()
